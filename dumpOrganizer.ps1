@@ -1,6 +1,6 @@
 ﻿cls
 $numberMatchingWords = 10
-cd C:\Users\girar\Desktop\source\BDD\Dump20240306
+#cd C:\Users\girar\Desktop\source\BDD\Dump20240307
 Do {
     $tokens = New-Object System.Collections.Generic.List[object]
     Get-ChildItem -File | ForEach-Object {
