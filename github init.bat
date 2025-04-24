@@ -1,4 +1,4 @@
-@echo off
+::@echo off
 ::choco install gh --yes
 ::gh auth login
 ::for %%I in (.) do set DirName=%%~nxI
@@ -7,10 +7,12 @@ for /d %%D in (*) do (
 	set dirName=%%D
 	for /F "delims=" %%a in ("!dirName:~0,1!") do (
         if not "%%a"=="_" (
-            rem echo !dirName!
             set dirName2=!dirName: =-!
-            rem echo !dirName2!
             cd !dirName!
+
+            if EXIST htdocs\ (cd htdocs\ && set "htd=a")
+        	if EXIST htdocs1\ (cd htdocs1\ && set "htd=a")
+
 
 			gh repo create !dirName2! --private
 			git init
@@ -18,8 +20,10 @@ for /d %%D in (*) do (
 			git commit -m "Initial commit"
 			git branch -M main
 			git remote add origin https://github.com/LucasGIRARD/!dirName2!.git
+			pause
 			git push -u origin main
 
+			if "%htd%" == "a" (cd ..\ && set "htd=b")
             cd ..
         	pause
         )
