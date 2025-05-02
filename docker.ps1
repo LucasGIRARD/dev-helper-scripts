@@ -1,7 +1,5 @@
 # Define the Docker Desktop executable path
 $dockerDesktopPath = "C:\Program Files\Docker\Docker\Docker Desktop.exe"
-$DockerProcessNumber = 4
-
 $options = @("web", "mysql", "web+mailHog", "web+blackFire", "all")
 
 trap {
@@ -204,30 +202,28 @@ function Select-Option {
     return $selectedIndex
 }
 
-$dockerDesktopProcessCommand = {
-    return (Get-Process -Name "Docker Desktop" -ErrorAction SilentlyContinue).Count
-}
-
 #function StartDocker {
 $StartDocker = {
     # Check if Docker Desktop is running
-    $dockerDesktopProcess = & $dockerDesktopProcessCommand
-
-    if ($dockerDesktopProcess -lt $dockerProcessNumber) {
+    if((docker ps 2>&1) -match '^(?!error)'){
+        Write-Host "Docker Desktop is running."
+    } else {
         Write-Host "Docker Desktop is not running. Starting Docker Desktop..."
-        Start-Process $dockerDesktopPath -WindowStyle Minimized
-
+        Start-Process $dockerDesktopPath
         Start-Sleep -Seconds 5
-        Get-Process -name "docker desktop" | Set-WindowState -State MINIMIZE
+        Get-Process -name "docker desktop" | Set-WindowState -State HIDE
 
         # Wait for Docker Desktop to start
-        $dockerDesktopProcess = & $dockerDesktopProcessCommand
-        while ($dockerDesktopProcess -lt $dockerProcessNumber) {
-            Write-Host "Checking Docker Desktop running ${dockerDesktopProcess}"
+        $dockerDesktopRunning = $false
+        while (!$dockerDesktopRunning) {
+            Write-Host "Checking Docker Desktop running"
+            if((docker ps 2>&1) -match '^(?!error)'){
+                $dockerDesktopRunning = $true
+                Write-Host "Docker Desktop is running."
+            }
             Start-Sleep -Seconds 1
-            $dockerDesktopProcess = & $dockerDesktopProcessCommand
         }
-        Start-Sleep -Seconds 2
+        Start-Sleep -Seconds 5
     }
 }
 
@@ -236,20 +232,16 @@ $StartDocker = {
 $selectedIndex = Select-Option -Options $options
 #Write-Host "You selected: $($options[$selectedIndex])"
 cd C:\devilbox
-
+& $StartDocker
+Get-Process -name "WindowsTerminal" | Set-WindowState -State MINIMIZE
 if ($($options[$selectedIndex]) -eq 'web') {
-    & $StartDocker
     docker-compose up httpd php mysql
 } elseif ($($options[$selectedIndex]) -eq 'mysql') {
-    & $StartDocker
     docker-compose up mysql
 }  elseif ($($options[$selectedIndex]) -eq 'web+mailHog') {
-    & $StartDocker
     docker-compose up httpd php mysql mailhog
 } elseif ($($options[$selectedIndex]) -eq 'php+blackFire') {
-    & $StartDocker
     docker-compose up httpd php mysql blackfire
 } elseif ($($options[$selectedIndex]) -eq 'all') {
-    & $StartDocker
     docker-compose up
 }
