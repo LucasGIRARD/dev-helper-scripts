@@ -233,15 +233,23 @@ $selectedIndex = Select-Option -Options $options
 #Write-Host "You selected: $($options[$selectedIndex])"
 cd C:\devilbox
 & $StartDocker
-Get-Process -name "WindowsTerminal" | Set-WindowState -State MINIMIZE
+
+
+$services = @("up")
+
+#Get-Process -name "WindowsTerminal" | Set-WindowState -State MINIMIZE
+
 if ($($options[$selectedIndex]) -eq 'web') {
-    docker-compose up httpd php mysql
+    $services += "httpd", "php", "mysql"
 } elseif ($($options[$selectedIndex]) -eq 'mysql') {
-    docker-compose up mysql
+    $services += "mysql"
 }  elseif ($($options[$selectedIndex]) -eq 'web+mailHog') {
-    docker-compose up httpd php mysql mailhog
+    $services += "httpd", "php", "mysql", "mailhog"
 } elseif ($($options[$selectedIndex]) -eq 'php+blackFire') {
-    docker-compose up httpd php mysql blackfire
-} elseif ($($options[$selectedIndex]) -eq 'all') {
-    docker-compose up
+    $services += "httpd", "php", "mysql", "blackfire"
 }
+
+
+Start-Job  -ScriptBlock { While($true){ (iwr http://alive.loc/).Content; Start-Sleep 60;} }
+docker-compose $services
+Remove-Job *
